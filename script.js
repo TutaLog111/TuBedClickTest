@@ -1,46 +1,71 @@
-let progress = 0;
-function loadProgress() {
-    if (progress < 100) {
-        progress++;
-        document.getElementById("progress").style.width = progress + "%";
-        document.getElementById("progress-text").innerText = progress + "%";
-        setTimeout(loadProgress, 30);
-    } else {
-        document.getElementById("loader").classList.add("hidden");
-        document.getElementById("main-content").classList.remove("hidden");
-    }
-}
-setTimeout(loadProgress, 500);
 
 let clicks = 0;
-let startTime = 0;
-let testDuration = 5;
-let interval;
+let timer = null;
+const timeLimit = 5;
 
-function startTest(seconds) {
-    testDuration = seconds;
-    document.getElementById("timer").innerHTML = `${seconds}<br>Timer`;
-    clicks = 0;
-    document.getElementById("cps").innerHTML = `0<br>Click/s`;
-    document.getElementById("score").innerHTML = `0<br>Score`;
-    startTime = new Date().getTime();
-    interval = setInterval(updateTimer, 1000);
+function handleClick() {
+    if (!timer) return;
+    clicks++;
+    document.getElementById("cps").innerText = clicks;
 }
 
-document.getElementById("click-area").addEventListener("click", function() {
-    if (startTime === 0) return;
-    clicks++;
-    document.getElementById("score").innerHTML = `${clicks}<br>Score`;
-});
+function startGame() {
+    clicks = 0;
+    document.getElementById("results").classList.add("hidden");
+    document.getElementById("click-area").style.pointerEvents = 'auto';
+    document.getElementById("cps").innerText = 0;
 
-function updateTimer() {
-    let elapsed = (new Date().getTime() - startTime) / 1000;
-    let remaining = testDuration - elapsed;
-    if (remaining <= 0) {
-        clearInterval(interval);
-        document.getElementById("timer").innerHTML = `0<br>Timer`;
-    } else {
-        document.getElementById("timer").innerHTML = `${Math.ceil(remaining)}<br>Timer`;
-        document.getElementById("cps").innerHTML = `${(clicks / elapsed).toFixed(2)}<br>Click/s`;
+    let timeLeft = timeLimit;
+    timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) endGame();
+    }, 1000);
+}
+
+function endGame() {
+    clearInterval(timer);
+    timer = null;
+
+    let cps = (clicks / timeLimit).toFixed(1);
+    document.getElementById('cps').innerHTML = cps + "<br>Click/s";
+    document.getElementById('final-cps').innerText = cps;
+
+    let rank = "Turtle";
+    let msg = "Try to click faster!";
+    if (cps >= 14) {
+        rank = "Cheetah";
+        msg = "Your fingers snap at blistering speed just like the speedie cat runs. Hail to the king of clicking.";
+    } else if (cps >= 8) {
+        rank = "Rabbit";
+        msg = "Quick and nimble! You're doing great!";
+    } else if (cps >= 4) {
+        rank = "Cat";
+        msg = "You're average, but keep going!";
     }
+
+    document.getElementById('rank').innerText = rank;
+    document.getElementById('rank-msg').innerText = msg;
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('click-area').style.pointerEvents = 'none';
+
+    let name = prompt("Inserisci il tuo nome per salvare il punteggio:");
+    if (name) {
+        fetch("save_score.php", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, cps })
+        }).then(() => loadScores());
+    }
+}
+
+function loadScores() {
+    fetch("get_scores.php")
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById("leaderboard");
+            if (!container) return;
+            container.innerHTML = "<h3>🏆 Top 10</h3><ol>" +
+                data.map(entry => `<li>${entry.name} — <strong>${entry.cps} CPS</strong></li>`).join("") +
+                "</ol>";
+        });
 }

@@ -1,0 +1,40 @@
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    margin-top: 50px;
+}
+.click-area {
+    width: 200px;
+    height: 200px;
+    background-color: #292929;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    border-radius: 10px;
+    user-select: none;
+}
+.hidden {
+    display: none;
+}
+.leaderboard {
+    background: #1f1f1f;
+    margin: 40px auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    text-align: left;
+    color: #ddd;
+}
+.leaderboard ol {
+    padding-left: 20px;
+}
